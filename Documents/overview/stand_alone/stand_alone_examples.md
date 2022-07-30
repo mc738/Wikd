@@ -2,7 +2,6 @@
 [_metadata_:author]:- "daveying"
 [_metadata_:author]:- "daveying"
 [_metadata_:author]:- "daveying"
-
 # Stand alone
 
 `Wikd` can be run as a stand alone application. 
