@@ -1,7 +1,6 @@
-﻿[_metadata_:author]:- "daveying"
-[_metadata_:author]:- "daveying"
-[_metadata_:author]:- "daveying"
-[_metadata_:author]:- "daveying"
+﻿<meta name="title" content="Stand alone">
+<meta name="wikd-order" content="0">
+
 # Stand alone
 
 `Wikd` can be run as a stand alone application. 
