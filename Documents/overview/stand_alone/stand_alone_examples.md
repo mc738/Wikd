@@ -1,8 +1,7 @@
-﻿---
-title: Title
-order: 1
-tags: tag1, tag2, tag3
----
+﻿[_metadata_:author]:- "daveying"
+[_metadata_:author]:- "daveying"
+[_metadata_:author]:- "daveying"
+[_metadata_:author]:- "daveying"
 
 # Stand alone
 
