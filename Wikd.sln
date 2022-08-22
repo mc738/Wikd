@@ -4,6 +4,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Wikd", "Wikd\Wikd.fsproj", 
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Wikd.App", "Wikd.App\Wikd.App.fsproj", "{54A7E3E5-FDBA-468F-B22C-52435B8A480D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_external", "_external", "{667BCFAE-75E6-49BB-B984-F1CED2A2B825}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Core", "..\FDOM\FDOM.Core\FDOM.Core.fsproj", "{E972F82C-15C7-4498-B1BD-AFA90146F83C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,12 @@ Global
 		{54A7E3E5-FDBA-468F-B22C-52435B8A480D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54A7E3E5-FDBA-468F-B22C-52435B8A480D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54A7E3E5-FDBA-468F-B22C-52435B8A480D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E972F82C-15C7-4498-B1BD-AFA90146F83C} = {667BCFAE-75E6-49BB-B984-F1CED2A2B825}
 	EndGlobalSection
 EndGlobal

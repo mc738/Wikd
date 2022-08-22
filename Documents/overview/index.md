@@ -4,6 +4,6 @@
 
 ## Stand alone
 
-See more details [here](./overview/stand_alone.md)
+See more details [here](./stand_alone/index.md)
 
 ## StaticCMS plug
