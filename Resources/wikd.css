@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit&family=Roboto+Condensed&family=Roboto+Mono&display=swap');
+
+:root {
+    --roboto: 'Roboto Condensed', sans-serif;
+    --outfit: 'Outfit', sans-serif;
+    --mono: 'Roboto Mono', monospace;
+    --bg-1: white;
+    --bg-2: rgba(0,0,0,0.2);
+    --alt-bg-1: black;
+    --fg-1: black;
+    --padding: 1rem;
+    --alt-fg-1: white;
+    --menu-1: rgba(0,0,0,0.5);
+
+    --drac-bg: #282a36;
+    --drac-bg2: #44475a;
+    --drac-fg: 	#f8f8f2;
+    --drac-fg2: #6272a4;
+    --drac-cyan: #8be9fd;
+    --drac-green: #50fa7b;
+    --drac-orange: #ffb86c;
+    --drac-pink: #ff79c6;
+    --drac-purple: #bd93f9;
+    --drac-red: #ff5555;
+    --drac-yellow: #f1fa8c;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
+    font-size: 16px;
+    font-family: var(--outfit);
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+#index {
+    width: 200px;
+    padding: 1rem;
+}
+
+main { 
+    width: calc(100% - 200px);
+    padding: 1rem;
+}
+
+
+
+.index-item div {
+    padding-left: 1rem;
+}
+
