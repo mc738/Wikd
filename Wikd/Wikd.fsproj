@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <Compile Include="Library.fs" />
+        <Compile Include="Common.fs" />
         <Compile Include="Persistence.fs" />
         <Compile Include="DataStore.fs" />
         <Compile Include="Renderer.fs" />

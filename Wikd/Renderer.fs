@@ -3,6 +3,7 @@
 open System
 open System.IO
 open System.Text
+open System.Text.RegularExpressions
 open FDOM.Core.Common
 open FDOM.Rendering
 open Fluff.Core
@@ -62,7 +63,14 @@ module Renderer =
     let rewriteLinks (content: DOM.InlineContent) =
         match content with
         | DOM.InlineContent.Link link ->
-            { link with Url = link.Url.Replace(".md", ".html") }
+            let capture = Regex.Match(link.Url, "[^/]+(?=\.md$)")
+            
+            let url =
+                match capture.Success with
+                | true -> $"{capture.Value}.html"
+                | false -> link.Url
+                
+            { link with Url = url }
             |> DOM.InlineContent.Link
         | DOM.InlineContent.Span span -> span |> DOM.InlineContent.Span
         | DOM.InlineContent.Text text -> text |> DOM.InlineContent.Text

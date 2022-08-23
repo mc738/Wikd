@@ -1,30 +1,18 @@
 ﻿namespace Wikd
 
-open Freql.Core.Common.Types
-open Freql.Sqlite
-open Microsoft.Data.Sqlite
 
 module DataStore =
 
 
+    open Freql.Core.Common.Types
+    open Freql.Sqlite
+    open Microsoft.Data.Sqlite
     open System
     open System.IO
     open System.Security.Cryptography
     open Wikd.Persistence
 
     module Internal =
-
-        let hashStream (hasher: SHA256) (stream: Stream) =
-            stream.Seek(0L, SeekOrigin.Begin) |> ignore
-
-            let hash =
-                hasher.ComputeHash stream |> Convert.ToHexString
-
-            stream.Seek(0L, SeekOrigin.Begin) |> ignore
-            hash
-
-        let hashBytes (hasher: SHA256) (bytes: byte array) =
-            hasher.ComputeHash bytes |> Convert.ToHexString
 
         let initialize (ctx: SqliteContext) =
             [ Records.Category.CreateTableSql()
@@ -38,14 +26,15 @@ module DataStore =
               Records.PageMetadataItem.CreateTableSql() ]
             |> List.iter (fun t -> ctx.ExecuteSqlNonQuery t |> ignore)
 
-        let addPage (ctx: SqliteContext) (name: string) (displayName: string) (parent: string option) (order: int) =
+        let addPage (ctx: SqliteContext) (name: string) (displayName: string) (parent: string option) (order: int) (directory: string option) =
 
             ({ Name = name
                DisplayName = displayName
                Parent = parent
                CreatedOn = DateTime.UtcNow
                PageOrder = order
-               Active = true }: Parameters.NewPage)
+               Active = true
+               Directory = directory }: Parameters.NewPage)
             |> Operations.insertPage ctx
 
         let addPageVersion
@@ -122,7 +111,7 @@ module DataStore =
                 Internal.initialize ctx
                 WikdStore(ctx)
 
-        member _.AddPage(name, displayName, parent) =
+        member _.AddPage(name, displayName, parent, directory) =
 
             let order =
                 match parent with
@@ -131,7 +120,7 @@ module DataStore =
                 |> Option.map (fun p -> p.PageOrder + 1)
                 |> Option.defaultValue 0
 
-            Internal.addPage ctx name displayName parent order
+            Internal.addPage ctx name displayName parent order directory
 
         member _.AddPageVersion(id, page, stream, isDraft) =
 
@@ -149,3 +138,7 @@ module DataStore =
         member _.GetPagesForParent(parent) = Internal.getPagesForParent ctx parent
 
         member _.GetTopLevelPages() = Internal.getTopLevelPages ctx
+
+        member _.GetPage(page) = Internal.getPage ctx page
+        
+        
