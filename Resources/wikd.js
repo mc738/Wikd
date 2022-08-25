@@ -5,5 +5,7 @@ async function fetchPage(url) {
     let res = await fetch(url);
 
     mainContent.innerHTML = await res.text();
+    // Highlight code snippets with prism.
+    window.Prism.highlightAll();
 }
 
