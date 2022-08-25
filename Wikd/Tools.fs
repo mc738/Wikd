@@ -145,7 +145,7 @@ module Tools =
             | None -> ()
             
             directory.Files
-            |> List.map (importFile store parent dir)
+            |> List.map (importFile store (Some directory.Name) dir)
             |> List.iter resultHandler
             
             directory.Children

@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_external", "_external", "{
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Core", "..\FDOM\FDOM.Core\FDOM.Core.fsproj", "{E972F82C-15C7-4498-B1BD-AFA90146F83C}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Rendering.Html", "..\FDOM\FDOM.Rendering.Html\FDOM.Rendering.Html.fsproj", "{80D6E873-009E-431E-A70C-B06131CDBA0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +28,13 @@ Global
 		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E972F82C-15C7-4498-B1BD-AFA90146F83C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80D6E873-009E-431E-A70C-B06131CDBA0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80D6E873-009E-431E-A70C-B06131CDBA0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80D6E873-009E-431E-A70C-B06131CDBA0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80D6E873-009E-431E-A70C-B06131CDBA0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E972F82C-15C7-4498-B1BD-AFA90146F83C} = {667BCFAE-75E6-49BB-B984-F1CED2A2B825}
+		{80D6E873-009E-431E-A70C-B06131CDBA0A} = {667BCFAE-75E6-49BB-B984-F1CED2A2B825}
 	EndGlobalSection
 EndGlobal

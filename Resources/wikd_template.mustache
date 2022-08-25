@@ -5,15 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
-    <link href="{{css_url}}" rel="stylesheet">
+    {{#styles}}
+        <link href="{{url}}" rel="stylesheet">     
+    {{/styles}}
 </head>
 <body>
 <div id="index">
     {{&index}}
 </div>
-<main>
+<main id="main">
     {{&content}}
 </main>
-<script src="{{script_url}}"></script>
+{{#scripts}}
+    <script src="{{url}}"></script>
+{{/scripts}}
 </body>
 </html>
