@@ -1,9 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit&family=Roboto+Condensed&family=Roboto+Mono&display=swap');
 
 :root {
-    --roboto: 'Roboto Condensed', sans-serif;
-    --outfit: 'Outfit', sans-serif;
-    --mono: 'Roboto Mono', monospace;
+
+    --main-font: 'Outfit', sans-serif;
+    --secondary-font: 'Roboto Condensed', sans-serif;
+    --mono-font: 'Roboto Mono', monospace;
     --bg-1: white;
     --bg-2: rgba(0,0,0,0.2);
     --alt-bg-1: black;
@@ -11,6 +12,22 @@
     --padding: 1rem;
     --alt-fg-1: white;
     --menu-1: rgba(0,0,0,0.5);
+    --highlight: rebeccapurple;
+    --highlight-size: 0.75rem;
+    --highlight-padding: 0.25rem;
+
+    --h1-size: 2rem;
+    --h2-size: 1.75rem;
+    --h3-size: 1.5rem;
+    --h4-size: 1.25rem;
+
+    --margin-bottom: 1rem;
+    --li-margin-bottom: 0.5rem;
+
+    --standard-padding: 1rem;
+    --half-padding: calc(var(--standard-padding) / 2);
+
+    --list-margin: 1rem;
 
     --drac-bg: #282a36;
     --drac-bg2: #44475a;
@@ -31,7 +48,7 @@
     border: none;
     box-sizing: border-box;
     font-size: 16px;
-    font-family: var(--outfit);
+    font-family: var(--main-font);
 }
 
 body {
@@ -42,17 +59,63 @@ body {
 
 #index {
     width: 200px;
-    padding: 1rem;
+    padding: var(--standard-padding);
+    background-color: var(--bg-2);
 }
 
-main { 
+main {
     width: calc(100% - 200px);
     padding: 1rem;
+    height: 100%;
+    overflow-y: scroll;
 }
 
+h1 {
+    font-size: var(--h1-size);
+}
 
+h2 {
+    font-size: var(--h2-size);
+}
+
+h3 {
+    font-size: var(--h3-size);
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    margin-bottom: var(--margin-bottom);
+}
 
 .index-item div {
-    padding-left: 1rem;
+    padding-left: var(--half-padding);
 }
 
+article {
+    padding: var(--standard-padding);
+}
+
+.index-item a {
+    text-decoration: none;
+    color: var(--fg-1);
+}
+
+.code {
+    background-color: var(--bg-2);
+    padding-left: var(--highlight-padding);
+    padding-right: var(--highlight-padding);
+    color: var(--highlight);
+    font-family: var(--mono-font);
+    font-size: var(--highlight-size);
+}
+
+ul, ol {
+    margin-left: var(--list-margin);
+}
+
+li {
+    margin-bottom: var(--li-margin-bottom);
+}
+
+ul li:last-child, ol li:last-child {
+    margin-bottom: var(--margin-bottom);
+}
