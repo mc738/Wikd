@@ -26,7 +26,7 @@ module DataStore =
               Records.PageMetadataItem.CreateTableSql() ]
             |> List.iter (fun t -> ctx.ExecuteSqlNonQuery t |> ignore)
 
-        let addPage (ctx: SqliteContext) (name: string) (displayName: string) (parent: string option) (order: int) (directory: string option) =
+        let addPage (ctx: SqliteContext) (name: string) (displayName: string) (parent: string option) (order: int) (directory: string option) (icon: string option) =
 
             ({ Name = name
                DisplayName = displayName
@@ -34,7 +34,8 @@ module DataStore =
                CreatedOn = DateTime.UtcNow
                PageOrder = order
                Active = true
-               Directory = directory }: Parameters.NewPage)
+               Directory = directory
+               Icon = icon }: Parameters.NewPage)
             |> Operations.insertPage ctx
 
         let addPageVersion
@@ -111,7 +112,7 @@ module DataStore =
                 Internal.initialize ctx
                 WikdStore(ctx)
 
-        member _.AddPage(name, displayName, parent, directory) =
+        member _.AddPage(name, displayName, parent, directory, icon) =
 
             let order =
                 match parent with
@@ -120,7 +121,7 @@ module DataStore =
                 |> Option.map (fun p -> p.PageOrder + 1)
                 |> Option.defaultValue 0
 
-            Internal.addPage ctx name displayName parent order directory
+            Internal.addPage ctx name displayName parent order directory icon
 
         member _.AddPageVersion(id, page, stream, isDraft) =
 

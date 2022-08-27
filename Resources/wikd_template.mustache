@@ -8,8 +8,11 @@
     {{#styles}}
         <link href="{{url}}" rel="stylesheet">     
     {{/styles}}
+    {{#faScript}}
+        <script src="{{url}}" crossorigin="anonymous"></script>
+    {{/faScript}}
 </head>
-<body>
+<body onload="init()">
 <div id="index">
     {{&index}}
 </div>

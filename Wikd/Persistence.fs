@@ -5,7 +5,7 @@ open System.Text.Json.Serialization
 open Freql.Core.Common
 open Freql.Sqlite
 
-/// Module generated on 23/08/2022 20:19:09 (utc) via Freql.Sqlite.Tools.
+/// Module generated on 26/08/2022 21:44:46 (utc) via Freql.Sqlite.Tools.
 [<RequireQualifiedAccess>]
 module Records =
     /// A record representing a row in the table `categories`.
@@ -224,7 +224,8 @@ module Records =
           [<JsonPropertyName("createdOn")>] CreatedOn: DateTime
           [<JsonPropertyName("pageOrder")>] PageOrder: int
           [<JsonPropertyName("active")>] Active: bool
-          [<JsonPropertyName("directory")>] Directory: string option }
+          [<JsonPropertyName("directory")>] Directory: string option
+          [<JsonPropertyName("icon")>] Icon: string option }
     
         static member Blank() =
             { Name = String.Empty
@@ -233,7 +234,8 @@ module Records =
               CreatedOn = DateTime.UtcNow
               PageOrder = 0
               Active = true
-              Directory = None }
+              Directory = None
+              Icon = None }
     
         static member CreateTableSql() = """
         CREATE TABLE pages (
@@ -242,7 +244,7 @@ module Records =
 	parent TEXT,
 	created_on TEXT NOT NULL,
 	"page_order" INTEGER NOT NULL,
-	active INTEGER NOT NULL, directory TEXT,
+	active INTEGER NOT NULL, directory TEXT, icon TEXT,
 	CONSTRAINT pages_PK PRIMARY KEY (name),
 	CONSTRAINT pages_FK FOREIGN KEY (parent) REFERENCES pages(name)
 )
@@ -256,7 +258,8 @@ module Records =
               created_on,
               page_order,
               active,
-              directory
+              directory,
+              icon
         FROM pages
         """
     
@@ -339,7 +342,7 @@ module Records =
         static member TableName() = "tags"
     
 
-/// Module generated on 23/08/2022 20:19:09 (utc) via Freql.Tools.
+/// Module generated on 26/08/2022 21:44:46 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Parameters =
     /// A record representing a new row in the table `categories`.
@@ -432,7 +435,8 @@ module Parameters =
           [<JsonPropertyName("createdOn")>] CreatedOn: DateTime
           [<JsonPropertyName("pageOrder")>] PageOrder: int
           [<JsonPropertyName("active")>] Active: bool
-          [<JsonPropertyName("directory")>] Directory: string option }
+          [<JsonPropertyName("directory")>] Directory: string option
+          [<JsonPropertyName("icon")>] Icon: string option }
     
         static member Blank() =
             { Name = String.Empty
@@ -441,7 +445,8 @@ module Parameters =
               CreatedOn = DateTime.UtcNow
               PageOrder = 0
               Active = true
-              Directory = None }
+              Directory = None
+              Icon = None }
     
     
     /// A record representing a new row in the table `resources`.
@@ -476,7 +481,7 @@ module Parameters =
               Icon = None }
     
     
-/// Module generated on 23/08/2022 20:19:09 (utc) via Freql.Tools.
+/// Module generated on 26/08/2022 21:44:46 (utc) via Freql.Tools.
 [<RequireQualifiedAccess>]
 module Operations =
 

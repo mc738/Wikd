@@ -6,8 +6,7 @@ module Common =
     open System
     open System.IO
     open System.Security.Cryptography
-
-         
+   
      let hashStream (hasher: SHA256) (stream: Stream) =
             stream.Seek(0L, SeekOrigin.Begin) |> ignore
 

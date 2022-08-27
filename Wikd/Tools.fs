@@ -83,6 +83,9 @@ module Tools =
                     | false, _ -> None)
                 |> Option.defaultValue false
 
+            let icon =
+                metadata.TryFind "wikd:icon"
+            
             use ms =
                 new MemoryStream(
                     lines
@@ -106,7 +109,7 @@ module Tools =
                     ImportResult.VersionAdded name
             | None ->
                 // Page doesn't exist.
-                store.AddPage(name, title, parent, directory)
+                store.AddPage(name, title, parent, directory, icon)
                 store.AddPageVersion(Guid.NewGuid().ToString("n"), name, ms, isDraft)
                 ImportResult.PageAdded name
 

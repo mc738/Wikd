@@ -18,9 +18,19 @@ module Renderer =
         | Static
         | Dynamic
 
+    type IconType = FontAwesome of KitUrl: string
+
+    type RendererSettings =
+        { Mode: RenderMode
+          Icons: IconType option
+          Styles: string list
+          Scripts: string list }
+
+
     type PageItem =
         { Name: string
           DisplayName: string
+          Icon: string
           Children: PageItem list }
 
     let toLines (str: string) =
@@ -33,6 +43,7 @@ module Renderer =
 
         { Name = page.Name
           DisplayName = page.DisplayName
+          Icon = page.Icon |> Option.defaultValue "fas fa-file-alt"
           Children = children }
 
 
@@ -44,63 +55,29 @@ module Renderer =
             let children =
                 createStaticIndex (p.Children) |> String.concat ""
 
-            $"""<div class="index-item"><a href="./{p.Name}.html">{p.DisplayName}</a>{children}</div>""")
+            $"""<div class="index-item static"><a href="./{p.Name}.html">{p.DisplayName}</a>{children}</div>""")
 
-    let rec createDynamicIndex (pages: PageItem list) =
+    let rec createDynamicIndex (level: int) (pages: PageItem list) =
         //let indexItems =
 
         pages
         |> List.map (fun p ->
             let children =
-                createDynamicIndex (p.Children)
+                createDynamicIndex (level + 1) (p.Children)
                 |> String.concat ""
 
-            $"""<div class="index-item"><p onclick="fetchPage('./{p.Name}.html')">{p.DisplayName}</p>{children}</div>""")
+            let id =
+                System
+                    .Guid
+                    .NewGuid()
+                    .ToString("n")
+                    .Substring(0, 6)
 
-
-    //|> String.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-    ///|> List.concat ""
-
-    (*    [ "name", Mustache.Value.Scalar p.Name
-              "url", Mustache.Value.Scalar $"./{p.Name}.html"
-              match p.Children.IsEmpty |> not with
-              | true -> "children", createIndex (p.Children)
-              | false -> () ]
-            |> Map.ofList
-            |> Mustache.Value.Object)
-        |> Mustache.Array*)
-
+            match p.Children.IsEmpty with
+            | true ->
+                $"""<div id="{id}" class="index-item dynamic page"><div class="item-title" data-indent="{level}"><p style="margin-left: 20px" onclick="fetchPage('./{p.Name}.html', '{id}')"><span style="margin-left: 5px; margin-right: 5px"><i class="{p.Icon}"></i></span>{p.DisplayName}</p></div></div>"""
+            | false ->
+                $"""<div id="{id}" class="index-item dynamic"><div class="item-title" data-indent="{level}" style="display: flex;"><button class="expand-btn" onclick="expand('{id}')"><span><i id="{id}-icon" class="fas fa-chevron-right"></i></span></button><p onclick="fetchPage('./{p.Name}.html', '{id}')"><span style=" margin-left: 5px; margin-right: 5px"><i class="{p.Icon}"></i></span>{p.DisplayName}</p></div><div class="children">{children}</div></div>""")
 
     let rewriteLinks (content: DOM.InlineContent) =
         match content with
@@ -162,7 +139,13 @@ module Renderer =
         page.Children
         |> List.iter (renderStaticPages store template data rootPath)
 
+    type PageData =
+        { Version: int
+          CreatedOn: DateTime
+          Hash: string }
+
     let rec renderDynamicPages (store: WikdStore) (rootPath: string) (page: PageItem) =
+
 
         store.GetLatestPageVersion page.Name
         |> Option.iter (fun pv ->
@@ -175,17 +158,15 @@ module Renderer =
             |> Html.renderArticle
             |> fun r -> File.WriteAllText(Path.Combine(rootPath, $"{page.Name}.html"), r))
 
+        // example:
+        // <article>...</article>
+        // ###METADATA###
+        // { "createdOn": "", "version": 0 }
+
         page.Children
         |> List.iter (renderDynamicPages store rootPath)
 
-    let run
-        (store: WikdStore)
-        (rootPath: string)
-        (styleUrls: string list)
-        (scriptUrls: string list)
-        (renderMode: RenderMode)
-        (template: Mustache.Token list)
-        =
+    let run (store: WikdStore) (rootPath: string) (settings: RendererSettings) (template: Mustache.Token list) =
 
         let pages =
             store.GetTopLevelPages()
@@ -195,37 +176,47 @@ module Renderer =
         // "../js/wikd.js"
 
         let styles =
-            styleUrls
+            settings.Styles
             |> List.map (fun s ->
                 [ "url", Mustache.Value.Scalar s ]
                 |> Map.ofList
                 |> Mustache.Value.Object)
             |> Mustache.Array
 
+        let sharedData =
+            [ "styles",
+              settings.Styles
+              |> List.map (fun s ->
+                  [ "url", Mustache.Value.Scalar s ]
+                  |> Map.ofList
+                  |> Mustache.Value.Object)
+              |> Mustache.Array
+              "scripts",
+              settings.Scripts
+              |> List.map (fun s ->
+                  [ "url", Mustache.Value.Scalar s ]
+                  |> Map.ofList
+                  |> Mustache.Value.Object)
+              |> Mustache.Array
+              match settings.Icons with
+              | Some icons ->
+                  match icons with
+                  | FontAwesome kitUrl ->
+                      "faScript",
+                      [ "url", Mustache.Value.Scalar kitUrl ]
+                      |> Map.ofList
+                      |> Mustache.Value.Object
+              | None -> () ]
 
 
-
-        match renderMode with
+        match settings.Mode with
         | RenderMode.Static ->
 
             let data =
-                [ "index",
-                  Mustache.Value.Scalar
-                  <| (createStaticIndex pages |> String.concat "")
-                  "styles",
-                  styleUrls
-                  |> List.map (fun s ->
-                      [ "url", Mustache.Value.Scalar s ]
-                      |> Map.ofList
-                      |> Mustache.Value.Object)
-                  |> Mustache.Array
-                  "scripts",
-                  scriptUrls
-                  |> List.map (fun s ->
-                      [ "url", Mustache.Value.Scalar s ]
-                      |> Map.ofList
-                      |> Mustache.Value.Object)
-                  |> Mustache.Array ]
+                sharedData
+                @ [ "index",
+                    Mustache.Value.Scalar
+                    <| (createStaticIndex pages |> String.concat "") ]
                 |> Map.ofList
                 |> fun v -> ({ Values = v; Partials = Map.empty }: Mustache.Data)
 
@@ -234,28 +225,15 @@ module Renderer =
         | RenderMode.Dynamic ->
             // Create the wiki page - index.html
             let data =
+                sharedData @
                 [ "index",
                   Mustache.Value.Scalar
-                  <| (createDynamicIndex pages |> String.concat "")
-                  "styles",
-                  styleUrls
-                  |> List.map (fun s ->
-                      [ "url", Mustache.Value.Scalar s ]
-                      |> Map.ofList
-                      |> Mustache.Value.Object)
-                  |> Mustache.Array
-                  "scripts",
-                  scriptUrls
-                  |> List.map (fun s ->
-                      [ "url", Mustache.Value.Scalar s ]
-                      |> Map.ofList
-                      |> Mustache.Value.Object)
-                  |> Mustache.Array ]
+                  <| (createDynamicIndex 1 pages |> String.concat "") ]
                 |> Map.ofList
                 |> fun v -> ({ Values = v; Partials = Map.empty }: Mustache.Data)
 
             // Create index.
-            
+
             Mustache.replace data true template
             |> fun r -> File.WriteAllText(Path.Combine(rootPath, $"index.html"), r)
 
