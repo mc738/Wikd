@@ -36,7 +36,6 @@ module Plugin =
             | None, _ -> Error "Missing `storePath` property"
             | _, None -> Error "Missing `templatePath` property"
 
-
         member wc.GetRenderSettings() =
             { Mode = wc.Mode
               Icons = wc.Icons
