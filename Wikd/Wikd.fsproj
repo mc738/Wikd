@@ -6,22 +6,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs" />
         <Compile Include="Common.fs" />
         <Compile Include="Persistence.fs" />
         <Compile Include="DataStore.fs" />
         <Compile Include="Renderer.fs" />
         <Compile Include="Tools.fs" />
+        <Compile Include="Plugin.fs" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="FDOM.Core" Version="0.3.0" />
+      <PackageReference Include="FDOM.Rendering.Html" Version="0.3.0" />
+      <PackageReference Include="Fluff.Core" Version="0.3.0" />
       <PackageReference Include="Freql.Sqlite" Version="0.5.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\FDOM\FDOM.Core\FDOM.Core.fsproj" />
-      <ProjectReference Include="..\..\FDOM\FDOM.Rendering.Html\FDOM.Rendering.Html.fsproj" />
-      <ProjectReference Include="..\..\Fluff\Fluff.Core\Fluff.Core.fsproj" />
+      <PackageReference Include="FsToolbox" Version="0.3.3" />
     </ItemGroup>
 
 </Project>
