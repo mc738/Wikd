@@ -38,7 +38,7 @@ module Renderer =
 
     type IconType =
         | FontAwesome of KitUrl: string
-        
+
         static member TryFromJson(json: JsonElement) =
             match Json.tryGetStringProperty "type" json with
             | Some "font-awesome" ->
@@ -47,7 +47,7 @@ module Renderer =
                 | None -> Error "Missing `kitUrl` property"
             | Some t -> Error $"Unknown icon type `{t}`"
             | None -> Error "Missing `type` property"
-        
+
         static member FromJson(json: JsonElement) =
             match IconType.TryFromJson json with
             | Ok it -> Some it
@@ -65,6 +65,13 @@ module Renderer =
           Icon: string
           Children: PageItem list }
 
+    type WikdParameters =
+        { RootPath: string
+          NavBarHtml: string option
+          Template: Mustache.Template
+          RendererSettings: RendererSettings }
+
+
     let toLines (str: string) =
         str.Split(Environment.NewLine) |> List.ofArray
 
@@ -76,7 +83,6 @@ module Renderer =
           DisplayName = page.DisplayName
           Icon = page.Icon |> Option.defaultValue "fas fa-file-alt"
           Children = children }
-
 
     let rec createStaticIndex (pages: PageItem list) =
         //let indexItems =
@@ -140,7 +146,6 @@ module Renderer =
             |> DOM.BlockContent.List
         | DOM.BlockContent.Image _ -> block
 
-
     let rec renderStaticPages
         (store: WikdStore)
         (template: Mustache.Token list)
@@ -150,8 +155,10 @@ module Renderer =
         =
         //let outputDir = Path.Combine(rootPath, path)
 
-        //if Directory.Exists outputDir |> not then Directory.CreateDirectory outputDir |> ignore
+        if Directory.Exists rootPath |> not then Directory.CreateDirectory rootPath |> ignore
 
+        printfn $"{rootPath}"
+        
         store.GetLatestPageVersion page.Name
         |> Option.iter (fun pv ->
             pv.RawBlob.ToBytes()
@@ -191,7 +198,7 @@ module Renderer =
 
         page.Children |> List.iter (renderDynamicPages store rootPath)
 
-    let run (store: WikdStore) (rootPath: string) (settings: RendererSettings) (template: Mustache.Token list) =
+    let run (store: WikdStore) (parameters: WikdParameters) =
 
         let pages = store.GetTopLevelPages() |> List.map (fun tlp -> getPages (store, tlp))
 
@@ -199,28 +206,30 @@ module Renderer =
         // "../js/wikd.js"
 
         let styles =
-            settings.Styles
+            parameters.RendererSettings.Styles
             |> List.map (fun s -> [ "url", Mustache.Value.Scalar s ] |> Map.ofList |> Mustache.Value.Object)
             |> Mustache.Array
 
         let sharedData =
             [ "styles",
-              settings.Styles
+              parameters.RendererSettings.Styles
               |> List.map (fun s -> [ "url", Mustache.Value.Scalar s ] |> Map.ofList |> Mustache.Value.Object)
               |> Mustache.Array
               "scripts",
-              settings.Scripts
+              parameters.RendererSettings.Scripts
               |> List.map (fun s -> [ "url", Mustache.Value.Scalar s ] |> Map.ofList |> Mustache.Value.Object)
               |> Mustache.Array
-              match settings.Icons with
+              match parameters.RendererSettings.Icons with
               | Some icons ->
                   match icons with
                   | FontAwesome kitUrl ->
-                      "faScript", [ "url", Mustache.Value.Scalar kitUrl ] |> Map.ofList |> Mustache.Value.Object
+                      "icon_script", [ "url", Mustache.Value.Scalar kitUrl ] |> Map.ofList |> Mustache.Value.Object
+              | None -> ()
+              match parameters.NavBarHtml with
+              | Some navBar -> "nav_html", Mustache.Scalar navBar
               | None -> () ]
 
-
-        match settings.Mode with
+        match parameters.RendererSettings.Mode with
         | RenderMode.Static ->
 
             let data =
@@ -229,7 +238,8 @@ module Renderer =
                 |> Map.ofList
                 |> fun v -> ({ Values = v; Partials = Map.empty }: Mustache.Data)
 
-            pages |> List.iter (renderStaticPages store template data rootPath)
+            pages
+            |> List.iter (renderStaticPages store parameters.Template data parameters.RootPath)
         | RenderMode.Dynamic ->
             // Create the wiki page - index.html
             let data =
@@ -240,7 +250,7 @@ module Renderer =
 
             // Create index.
 
-            Mustache.replace data true template
-            |> fun r -> File.WriteAllText(Path.Combine(rootPath, $"index.html"), r)
+            Mustache.replace data true parameters.Template
+            |> fun r -> File.WriteAllText(Path.Combine(parameters.RootPath, $"index.html"), r)
 
-            pages |> List.iter (renderDynamicPages store rootPath)
+            pages |> List.iter (renderDynamicPages store parameters.RootPath)
