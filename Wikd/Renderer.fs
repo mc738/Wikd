@@ -156,8 +156,6 @@ module Renderer =
         //let outputDir = Path.Combine(rootPath, path)
 
         if Directory.Exists rootPath |> not then Directory.CreateDirectory rootPath |> ignore
-
-        printfn $"{rootPath}"
         
         store.GetLatestPageVersion page.Name
         |> Option.iter (fun pv ->
