@@ -57,12 +57,30 @@ module Renderer =
         { Mode: RenderMode
           Icons: IconType option
           Styles: string list
-          Scripts: string list }
+          Scripts: string list
+          IndexHeaderLevel: IndexHeaderLevel }
+
+    and IndexHeaderLevel =
+        { IndexH1: bool
+          IndexH2: bool
+          IndexH3: bool
+          IndexH4: bool
+          IndexH5: bool
+          IndexH6: bool }
+
+        static member Default() =
+            { IndexH1 = false
+              IndexH2 = false
+              IndexH3 = false
+              IndexH4 = false
+              IndexH5 = false
+              IndexH6 = false }
 
     type PageItem =
         { Name: string
           DisplayName: string
           Icon: string
+          Order: int
           Children: PageItem list }
 
     type WikdParameters =
@@ -77,11 +95,15 @@ module Renderer =
 
     let rec getPages (store: WikdStore, page: Records.Page) =
         let children =
-            store.GetPagesForParent page.Name |> List.map (fun cp -> getPages (store, cp))
+            store.GetPagesForParent page.Name
+            |> List.filter (fun p -> p.Active)
+            |> List.map (fun cp -> getPages (store, cp))
+            |> List.sortBy (fun pd -> pd.Order)
 
         { Name = page.Name
           DisplayName = page.DisplayName
           Icon = page.Icon |> Option.defaultValue "fas fa-file-alt"
+          Order = page.PageOrder
           Children = children }
 
     let rec createStaticIndex (pages: PageItem list) =
@@ -89,7 +111,11 @@ module Renderer =
 
         pages
         |> List.map (fun p ->
-            let children = createStaticIndex (p.Children) |> String.concat ""
+            let children = createStaticIndex (p.Children |> List.sortBy (fun p -> p.Order)) |> String.concat ""
+
+            // Test
+            //$"""<details class="index-item static"><summary><a href="./{p.Name}.html">{p.DisplayName}</a></summary><div>{children}</div></details>"""
+
 
             $"""<div class="index-item static"><a href="./{p.Name}.html">{p.DisplayName}</a>{children}</div>""")
 
@@ -122,10 +148,24 @@ module Renderer =
         | DOM.InlineContent.Span span -> span |> DOM.InlineContent.Span
         | DOM.InlineContent.Text text -> text |> DOM.InlineContent.Text
 
-    let blockRewriter (contentRewriter: DOM.InlineContent -> DOM.InlineContent) (block: DOM.BlockContent) =
+    let blockRewriter
+        (indexHeaderLevel: IndexHeaderLevel)
+        (contentRewriter: DOM.InlineContent -> DOM.InlineContent)
+        (block: DOM.BlockContent)
+        =
         match block with
         | DOM.BlockContent.Header h ->
+            let index =
+                match h.Level with
+                | DOM.HeaderLevel.H1 -> indexHeaderLevel.IndexH1
+                | DOM.HeaderLevel.H2 -> indexHeaderLevel.IndexH2
+                | DOM.HeaderLevel.H3 -> indexHeaderLevel.IndexH3
+                | DOM.HeaderLevel.H4 -> indexHeaderLevel.IndexH4
+                | DOM.HeaderLevel.H5 -> indexHeaderLevel.IndexH5
+                | DOM.HeaderLevel.H6 -> indexHeaderLevel.IndexH6
+
             { h with
+                Indexed = index
                 Content = h.Content |> List.map contentRewriter }
             |> DOM.BlockContent.Header
         | DOM.BlockContent.Paragraph p ->
@@ -151,12 +191,14 @@ module Renderer =
         (template: Mustache.Token list)
         (data: Mustache.Data)
         (rootPath: string)
+        (indexHeaderLevel: IndexHeaderLevel)
         (page: PageItem)
         =
         //let outputDir = Path.Combine(rootPath, path)
 
-        if Directory.Exists rootPath |> not then Directory.CreateDirectory rootPath |> ignore
-        
+        if Directory.Exists rootPath |> not then
+            Directory.CreateDirectory rootPath |> ignore
+
         store.GetLatestPageVersion page.Name
         |> Option.iter (fun pv ->
             pv.RawBlob.ToBytes()
@@ -164,11 +206,12 @@ module Renderer =
             |> toLines
             |> FDOM.Core.Parsing.Parser.ParseLines
             |> fun p -> p.CreateBlockContent()
-            |> List.map (blockRewriter rewriteLinks)
+            |> List.map (blockRewriter indexHeaderLevel rewriteLinks)
             |> Html.renderBlocksWithTemplate template data
             |> fun r -> File.WriteAllText(Path.Combine(rootPath, $"{page.Name}.html"), r))
 
-        page.Children |> List.iter (renderStaticPages store template data rootPath)
+        page.Children
+        |> List.iter (renderStaticPages store template data rootPath indexHeaderLevel)
 
     type PageData =
         { Version: int
@@ -177,6 +220,7 @@ module Renderer =
 
     let rec renderDynamicPages (store: WikdStore) (rootPath: string) (page: PageItem) =
 
+        // TODO - index header level.
 
         store.GetLatestPageVersion page.Name
         |> Option.iter (fun pv ->
@@ -185,7 +229,7 @@ module Renderer =
             |> toLines
             |> FDOM.Core.Parsing.Parser.ParseLines
             |> fun p -> p.CreateBlockContent()
-            |> List.map (blockRewriter rewriteLinks)
+            |> List.map (blockRewriter (IndexHeaderLevel.Default()) rewriteLinks)
             |> Html.renderArticle
             |> fun r -> File.WriteAllText(Path.Combine(rootPath, $"{page.Name}.html"), r))
 
@@ -237,7 +281,14 @@ module Renderer =
                 |> fun v -> ({ Values = v; Partials = Map.empty }: Mustache.Data)
 
             pages
-            |> List.iter (renderStaticPages store parameters.Template data parameters.RootPath)
+            |> List.iter (
+                renderStaticPages
+                    store
+                    parameters.Template
+                    data
+                    parameters.RootPath
+                    parameters.RendererSettings.IndexHeaderLevel
+            )
         | RenderMode.Dynamic ->
             // Create the wiki page - index.html
             let data =

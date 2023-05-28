@@ -35,7 +35,8 @@ module Tools =
             |> List.filter (fun f -> Regex.IsMatch(f, "^*.md$"))
             |> List.map (fun f ->
                 ({ Path = f
-                   Name = Path.GetFileNameWithoutExtension f }: WikdFile))
+                   Name = Path.GetFileNameWithoutExtension f }
+                : WikdFile))
 
         let (indexFile, otherFiles) = getIndex files
 
@@ -51,14 +52,15 @@ module Tools =
            Name = Path.GetFileNameWithoutExtension path
            Files = otherFiles
            IndexFile = indexFile
-           Children = children }: WikdDirectory)
+           Children = children }
+        : WikdDirectory)
 
     [<RequireQualifiedAccess>]
     type ImportResult =
-        | PageAdded of Name : string
-        | VersionAdded of Name : string
-        | Skipped of Message : string
-        | Failure of Message : string
+        | PageAdded of Name: string
+        | VersionAdded of Name: string
+        | Skipped of Name: string * Message: string
+        | Failure of Message: string
 
     let importFile (store: WikdStore) (parent: string option) (directory: string option) (file: WikdFile) =
         try
@@ -67,13 +69,9 @@ module Tools =
                 |> List.ofArray
                 |> FDOM.Core.Parsing.Parser.ExtractMetadata
 
-            let name =
-                metadata.TryFind "wikd:name"
-                |> Option.defaultValue file.Name
+            let name = metadata.TryFind "wikd:name" |> Option.defaultValue file.Name
 
-            let title =
-                metadata.TryFind "wikd:title"
-                |> Option.defaultValue file.Name
+            let title = metadata.TryFind "wikd:title" |> Option.defaultValue file.Name
 
             let isDraft =
                 metadata.TryFind "wikd:draft"
@@ -83,15 +81,19 @@ module Tools =
                     | false, _ -> None)
                 |> Option.defaultValue false
 
-            let icon =
-                metadata.TryFind "wikd:icon"
+            let parentName = metadata.TryFind "wikd:parent" |> Option.orElse parent
+
+            let icon = metadata.TryFind "wikd:icon"
             
+            let order =
+                metadata.TryFind "wikd:order" |>
+                Option.bind (fun v ->
+                    match Int32.TryParse v with
+                    | true, i -> Some i
+                    | false, _ -> None)        
+
             use ms =
-                new MemoryStream(
-                    lines
-                    |> String.concat Environment.NewLine
-                    |> Encoding.UTF8.GetBytes
-                )
+                new MemoryStream(lines |> String.concat Environment.NewLine |> Encoding.UTF8.GetBytes)
 
             match store.GetLatestPageVersion name with
             | Some pv ->
@@ -101,11 +103,12 @@ module Tools =
                 match String.Equals(hash, pv.Hash, StringComparison.OrdinalIgnoreCase), pv.IsDraft, isDraft with
                 | true, true, true
                 | true, false, false
-                | true, true, false -> ImportResult.Skipped $"Page `{name}` not updated."
+                | true, true, false -> ImportResult.Skipped(name, $"Page `{name}` not updated.")
                 | true, false, true
                 | false, _, _ ->
                     ms.Position <- 0L
                     store.AddPageVersion(Guid.NewGuid().ToString("n"), name, ms, isDraft)
+                    // TODO add metadata?
                     ImportResult.VersionAdded name
             | None ->
                 // Page doesn't exist.
@@ -113,45 +116,47 @@ module Tools =
                 store.AddPageVersion(Guid.NewGuid().ToString("n"), name, ms, isDraft)
                 ImportResult.PageAdded name
 
-        with
-        | exn -> ImportResult.Failure exn.Message
+        with exn ->
+            ImportResult.Failure exn.Message
 
     let printResult (result: ImportResult) =
         match result with
-        | ImportResult.PageAdded name ->
-            printfn $"Page `{name}` added"
-        | ImportResult.VersionAdded name ->
-            printfn $"Page `{name}` version added"
-        | ImportResult.Skipped message ->
-            printfn $"Page skipped. Reason: {message}"
-        | ImportResult.Failure message ->
-            printfn $"Page import failed. Error: {message}"
+        | ImportResult.PageAdded name -> printfn $"Page `{name}` added"
+        | ImportResult.VersionAdded name -> printfn $"Page `{name}` version added"
+        | ImportResult.Skipped(name, message) -> printfn $"Page `{name}` skipped. Reason: {message}"
+        | ImportResult.Failure message -> printfn $"Page import failed. Error: {message}"
 
     let import (store: WikdStore) (resultHandler: ImportResult -> unit) (name: string) (path: string) =
         let data = scanDirectory true path
 
-        let rec importPages
-            (directoryPaths: string list)
-            (parent: string option)
-            (directory: WikdDirectory)
-            =
+        let rec importPages (directoryPaths: string list) (parent: string option) (directory: WikdDirectory) =
 
             let dir =
                 match directoryPaths.IsEmpty with
                 | true -> None
                 | false -> directoryPaths |> String.concat "/" |> Some
 
-            match directory.IndexFile with
-            | Some index ->
-                importFile store parent dir { index with Name = directory.Name }
-                |> resultHandler
-            | None -> ()
-            
-            directory.Files
-            |> List.map (importFile store (Some directory.Name) dir)
-            |> List.iter resultHandler
-            
+            // Get the name of the index file (this could be the directory name or specified in metadata).
+            let name =
+                match directory.IndexFile with
+                | Some index ->
+                    let r = importFile store parent dir { index with Name = directory.Name }
+
+                    r |> resultHandler
+
+                    match r with
+                    | ImportResult.PageAdded name -> Some name
+                    | ImportResult.Skipped(name, _) -> Some name
+                    | ImportResult.VersionAdded name -> Some name
+                    | _ -> None
+                | None -> None
+
+            let results = directory.Files |> List.map (importFile store name dir)
+
+            results |> List.iter resultHandler
+
+
             directory.Children
-            |> List.iter (importPages (directoryPaths @ [ directory.Name ]) (Some directory.Name))
-            
+            |> List.iter (importPages (directoryPaths @ [ directory.Name ]) (name))
+
         importPages [] None { data with Name = name }
